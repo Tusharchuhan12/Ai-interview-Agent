@@ -106,12 +106,6 @@ export const generateQuestion = async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
     const projectText =
       Array.isArray(projects) && projects.length
         ? projects.join(", ")
@@ -161,23 +155,8 @@ Resume: ${safeResume}
       .filter(Boolean)
       .slice(0, 5);
 
-    const interview = await Interview.create({
-      userId: user._id,
-      role,
-      experience,
-      mode,
-      resumeText: safeResume,
-      questions: questionsArray.map((q, index) => ({
-        question: q,
-        difficulty: ["easy", "easy", "medium", "medium", "hard"][index],
-        timeLimit: [60, 60, 90, 90, 120][index]
-      }))
-    });
-
     return res.json({
-      interviewId: interview._id,
-      userName: user.name,
-      questions: interview.questions
+      questions: questionsArray
     });
 
   } catch (error) {
@@ -187,8 +166,6 @@ Resume: ${safeResume}
     });
   }
 };
-
-
 
 export const submitAnswer = async (req, res) => {
   try {

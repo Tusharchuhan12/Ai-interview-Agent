@@ -57,7 +57,7 @@ function Step1SetUp({ onStart }) {
     const handleStart = async () => {
         setLoading(true)
         try {
-           const result = await axios.post(ServerUrl + "/api/interview/generate-questions" , {role, experience, mode , resumeText, projects, skills } , {withCredentials:true}) 
+           const result = await axios.post(ServerUrl +"/api/interview/generate-questions" , {role, experience, mode , resumeText, projects, skills } , {withCredentials:true}) 
            console.log(result.data)
           
            setLoading(false)

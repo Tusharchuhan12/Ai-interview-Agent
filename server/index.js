@@ -17,17 +17,19 @@ const app = express()
 // ✅ Middlewares
 app.use(morgan("dev"))
 
-app.use(
-    cors({
-        origin: [
-            "http://localhost:5173",
-            "https://ai-interview-agent-zeta.vercel.app"
-        ],
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: true,
-    })
-);
+import cors from "cors";
+
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://ai-interview-agent-zeta.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+}));
+
+app.options("*", cors()); // VERY IMPORTANT for preflight
+
 app.use(express.json())
 app.use(cookieParser())
 

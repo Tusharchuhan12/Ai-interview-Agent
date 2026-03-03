@@ -17,7 +17,7 @@ const app = express()
 // ✅ Middlewares
 app.use(morgan("dev"))
 
-import cors from "cors";
+
 
 app.use(cors({
     origin: [

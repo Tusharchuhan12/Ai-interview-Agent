@@ -1,5 +1,5 @@
 import fs from "fs";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
+import pdfjsLib from "pdfjs-dist/build/pdf.js";
 import { askAi } from "../services/openRouter.service.js";
 
 import Interview from "../models/interview.model.js";
@@ -9,9 +9,10 @@ export const analyzeResume = async (req, res) => {
   let filepath;
 
   try {
-
     if (!req.file) {
-      return res.status(400).json({ message: "Resume required" });
+      return res.status(400).json({
+        message: "Resume required"
+      });
     }
 
     filepath = req.file.path;
@@ -19,15 +20,16 @@ export const analyzeResume = async (req, res) => {
     const fileBuffer = await fs.promises.readFile(filepath);
     const uint8Array = new Uint8Array(fileBuffer);
 
-    const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
-
+    const pdf = await pdfjsLib.getDocument({
+      data: uint8Array
+    }).promise;
     let resumeText = "";
 
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       const page = await pdf.getPage(pageNum);
       const content = await page.getTextContent();
 
-      resumeText += content.items.map(i => i.str).join(" ") + "\n";
+      resumeText += content.items.map(i => i.str).join(" ") + " ";
     }
 
     resumeText = resumeText.replace(/\s+/g, " ").trim();
@@ -56,7 +58,7 @@ Return ONLY JSON:
 
     const aiResponse = await askAi(messages);
 
-    if (!aiResponse) {
+    if (!aiResponse?.trim()) {
       return res.status(500).json({
         message: "AI response empty"
       });
@@ -65,6 +67,7 @@ Return ONLY JSON:
     const cleanResponse = aiResponse
       .replace(/```json/g, "")
       .replace(/```/g, "")
+      .replace(/^\s*\d+\.\s*/gm, "")
       .trim();
 
     const parsed = JSON.parse(cleanResponse);
@@ -78,11 +81,12 @@ Return ONLY JSON:
     });
 
   } catch (error) {
-    console.error("Resume analysis error:", error.message);
+    console.error("Resume analysis error:", error);
 
     return res.status(500).json({
-      message: "Resume analysis failed"
+      message: error?.message || "Resume analysis failed"
     });
+  
 
   } finally {
     if (filepath && fs.existsSync(filepath)) {
@@ -293,5 +297,3 @@ export const finishInterview = async (req, res) => {
     res.status(500).json({ message: "Finish interview failed" });
   }
 };
-
-

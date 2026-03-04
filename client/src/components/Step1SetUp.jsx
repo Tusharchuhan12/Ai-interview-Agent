@@ -13,7 +13,7 @@ import axios from "axios"
 import { useDispatch, useSelector } from 'react-redux';
 import { ServerUrl } from '../App';
 function Step1SetUp({ onStart }) {
-    
+
     const dispatch = useDispatch()
     const [role, setRole] = useState("");
     const [experience, setExperience] = useState("");
@@ -35,7 +35,7 @@ function Step1SetUp({ onStart }) {
         formdata.append("resume", resumeFile)
 
         try {
-            const result = await axios.post(ServerUrl +"/api/interview/resume", formdata, )
+            const result = await axios.post(ServerUrl + "/api/interview/resume", formdata,)
 
             console.log(result.data)
 
@@ -57,11 +57,11 @@ function Step1SetUp({ onStart }) {
     const handleStart = async () => {
         setLoading(true)
         try {
-           const result = await axios.post(ServerUrl +"/api/interview/generate-questions" , {role, experience, mode , resumeText, projects, skills } , {withCredentials:true}) 
-           console.log(result.data)
-          
-           setLoading(false)
-           onStart(result.data)
+            const result = await axios.post(ServerUrl + "/api/interview/generate-questions", { role, experience, mode, resumeText, projects, skills }, { withCredentials: true })
+            console.log(result.data)
+
+            setLoading(false)
+            onStart(result.data)
             onStart(result.data);
         } catch (error) {
             console.log(error)
@@ -248,12 +248,12 @@ function Step1SetUp({ onStart }) {
 
 
                         <motion.button
-                        onClick={handleStart}
+                            onClick={handleStart}
                             disabled={!role || !experience || loading}
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.95 }}
                             className='w-full disabled:bg-gray-600 bg-green-600 hover:bg-green-700 text-white py-3 rounded-full text-lg font-semibold transition duration-300 shadow-md'>
-                            {loading ? "Staring...":"Start Interview"}
+                            {loading ? "Staring..." : "Start Interview"}
 
 
                         </motion.button>

@@ -1,7 +1,7 @@
 import fs from "fs";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
 import { askAi } from "../services/openRouter.service.js";
-import User from "../models/user.model.js";
+
 import Interview from "../models/interview.model.js";
 
 
@@ -91,7 +91,6 @@ Return ONLY JSON:
   }
 };
 
-
 export const generateQuestion = async (req, res) => {
   try {
     let { role, experience, mode, resumeText, projects, skills } = req.body;
@@ -106,6 +105,8 @@ export const generateQuestion = async (req, res) => {
       });
     }
 
+    const safeResume = resumeText?.slice(0, 2000) || "None";
+
     const projectText =
       Array.isArray(projects) && projects.length
         ? projects.join(", ")
@@ -116,16 +117,30 @@ export const generateQuestion = async (req, res) => {
         ? skills.join(", ")
         : "None";
 
-    const safeResume = resumeText?.trim() || "None";
-
     const messages = [
       {
         role: "system",
         content: `
 You are a professional interviewer.
+
 Generate exactly 5 interview questions.
-15-25 words per question.
-One question per line.
+
+Return ONLY JSON format:
+
+{
+  "questions": [
+    "question 1",
+    "question 2",
+    "question 3",
+    "question 4",
+    "question 5"
+  ]
+}
+
+Rules:
+- No numbering
+- No bullet points
+- Each question 15-25 words
 `
       },
       {
@@ -149,18 +164,67 @@ Resume: ${safeResume}
       });
     }
 
-    const questionsArray = aiResponse
-      .split("\n")
+    console.log("RAW AI RESPONSE:", aiResponse);
+
+    const cleaned = aiResponse
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    let parsed;
+
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (err) {
+      return res.status(500).json({
+        message: "AI returned invalid JSON format"
+      });
+    }
+
+    if (!parsed.questions || !Array.isArray(parsed.questions)) {
+      return res.status(500).json({
+        message: "Invalid questions format"
+      });
+    }
+
+    const questionsArray = parsed.questions
       .map(q => q.trim())
-      .filter(Boolean)
+      .filter(q => q.length > 15)
       .slice(0, 5);
 
+    if (questionsArray.length < 5) {
+      return res.status(500).json({
+        message: "Failed to generate 5 questions"
+      });
+    }
+
+    console.log("Creating Interview...");
+
+    const newInterview = await Interview.create({
+      role,
+      experience,
+      mode,
+      resumeText: safeResume,
+      questions: questionsArray.map(q => ({
+        question: q,
+        answer: "",
+        score: 0,
+        difficulty: "",
+        timeLimit: 0,
+        feedback: ""
+      })),
+      finalScore: 0,
+      status: "Incompleted"
+    });
+
     return res.json({
-      questions: questionsArray
+      interviewId: newInterview._id,
+      questions: newInterview.questions
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Generate Question Error:", error.message);
+
     return res.status(500).json({
       message: "Interview generation failed"
     });
@@ -231,23 +295,3 @@ export const finishInterview = async (req, res) => {
 };
 
 
-
-export const getMyInterviews = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const interviews = await Interview.find({ user: userId });
-
-    res.status(200).json({
-      success: true,
-      interviews,
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
-  }
-};

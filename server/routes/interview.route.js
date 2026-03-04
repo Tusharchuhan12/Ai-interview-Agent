@@ -1,7 +1,7 @@
 import express from "express"
 
 import { upload } from "../middlewares/multer.js"
-import { analyzeResume,  generateQuestion,submitAnswer,finishInterview ,getMyInterviews} from "../controllers/interview.controller.js"
+import { analyzeResume,  generateQuestion,submitAnswer,finishInterview ,} from "../controllers/interview.controller.js"
 
 
 
@@ -13,7 +13,7 @@ interviewRouter.post("/generate-questions",generateQuestion)
  interviewRouter.post("/submit-answer",submitAnswer)
 interviewRouter.post("/finish",finishInterview)
 
- interviewRouter.get("/get-interview",getMyInterviews)
+
 // interviewRouter.get("/report/:id",isAuth,getInterviewReport)
 
 
